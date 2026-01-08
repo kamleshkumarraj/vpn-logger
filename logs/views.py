@@ -142,19 +142,8 @@ from django.shortcuts import render
 
 def vpn_dashboard(request):
     # Example data (replace with DB or API later)
-    vpn_sessions = [
-        {
-            "vpn_id": "126",
-            "name": "vpn-l2tp",
-            "status": "ESTABLISHED",
-            "uptime": "14 seconds ago",
-            "client_ip": "54.234.239.63",
-            "proposal": "AES_CBC_128/HMAC_SHA2_256_128/PRF_HMAC_SHA2_256/ECP_256",
-            "bytes_in": 0,
-            "bytes_out": 0,
-        }
-    ]
-
+    vpn_sessions = VPNSession.objects.all()
+    
     context = {
         "sessions": vpn_sessions
     }
