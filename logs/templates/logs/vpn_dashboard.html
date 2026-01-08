@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VPN Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+
+<div class="dashboard-container">
+    <h1 class="dashboard-title">VPN Sessions</h1>
+
+    {% for s in sessions %}
+    <div class="vpn-card">
+        <div class="vpn-left">
+            <h2>{{ s.name }}</h2>
+            <span class="status {{ s.status|lower }}">{{ s.status }}</span>
+            <p class="ip">{{ s.client_ip }}</p>
+        </div>
+
+        <div class="vpn-center">
+            <p><strong>Uptime:</strong> {{ s.uptime }}</p>
+            <p class="proposal">{{ s.proposal }}</p>
+        </div>
+
+        <div class="vpn-right">
+            <div class="traffic in">
+                ⬇ {{ s.bytes_in }} B
+            </div>
+            <div class="traffic out">
+                ⬆ {{ s.bytes_out }} B
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>
