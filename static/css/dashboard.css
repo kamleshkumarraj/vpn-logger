@@ -131,9 +131,14 @@ body {
     font-size: 12px;
 }
 
-.status.established {
+.status.active {
     background: #163f2b;
     color: #3dff9a;
+}
+
+.status.deactive {
+    background: #0f1738;
+    color: #ff6b6b;
 }
 
 /* Actions */
