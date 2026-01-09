@@ -9,6 +9,7 @@ class VPNSession(models.Model):
     proposal = models.CharField(max_length=255)
     bytes_in = models.BigIntegerField(default=0)
     bytes_out = models.BigIntegerField(default=0)
+    status = models.CharField(max_length=50, default="Active")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
