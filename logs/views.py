@@ -50,15 +50,15 @@ class VPNSessionCreateView(APIView):
             # -----------------------------
             if len(payload) == 0:
                 updated = VPNSession.objects.filter(
-                    status="Active"
+                    status="Connected"
                 ).update(
-                    status="Deactive"
+                    status="Disconnected"
                 )
 
                 return api_response(
                     success=True,
-                    message="All VPN sessions deactivated (empty payload)",
-                    data={"deactivated": updated}
+                    message="All VPN sessions Disconnected (empty payload)",
+                    data={"Disconnected": updated}
                 )
 
             # -----------------------------
@@ -90,14 +90,14 @@ class VPNSessionCreateView(APIView):
             db_ips = set(db_map.keys())
 
             # -----------------------------
-            # Step 2: Deactivate missing ACTIVE sessions
+            # Step 2: Deactivate missing Connected sessions
             # -----------------------------
             VPNSession.objects.filter(
-                status="Active"
+                status="Connected"
             ).exclude(
                 client_ip__in=payload_ips
             ).update(
-                status="Deactive"
+                status="Disconnected"
             )
 
             # -----------------------------
@@ -109,7 +109,7 @@ class VPNSessionCreateView(APIView):
                 session = db_map[ip]
                 data = payload_map[ip]
 
-                session.status = "Active"
+                session.status = "Connected"
                 session.vpn_id = data.get("vpn_id", session.vpn_id)
                 session.name = data.get("name", session.name)
                 session.uptime = data.get("uptime", session.uptime)
@@ -132,7 +132,7 @@ class VPNSessionCreateView(APIView):
                         client_ip=ip,
                         vpn_id=data.get("vpn_id"),
                         name=data.get("name"),
-                        status="Active",
+                        status="Connected",
                         uptime=data.get("uptime"),
                         proposal=data.get("proposal"),
                         bytes_in=data.get("bytes_in", 0),
@@ -171,7 +171,7 @@ class VPNSessionCreateView(APIView):
                     "received": len(payload),
                     "updated": len(sessions_to_update),
                     "created": len(sessions_to_create),
-                    "active": len(payload_ips),
+                    "Connected": len(payload_ips),
                 }
             )
 
