@@ -20,52 +20,119 @@ from .models import VPNSession
 from .serializers import VPNSessionSerializer
 from django.db import transaction
 
+from django.db import transaction
+from django.utils import timezone
+from rest_framework.views import APIView
+from rest_framework import status
+
 class VPNSessionCreateView(APIView):
 
     def post(self, request):
-        """
-        Accepts:
-        - Single object
-        - Array of objects (bulk)
-        """
         try:
             payload = request.data
-            is_bulk = isinstance(payload, list)
 
-            if not is_bulk:
+            # Normalize payload (single OR bulk)
+            if isinstance(payload, dict):
                 payload = [payload]
 
-            client_ips = [item.get("client_ip") for item in payload if item.get("client_ip")]
+            # -----------------------------
+            # Step 0: Normalize payload
+            # -----------------------------
+            payload_map = {
+                item["client_ip"]: item
+                for item in payload
+                if item.get("client_ip")
+            }
 
-            # Filter existing IPs
-            existing_ips = set(
-                VPNSession.objects.filter(client_ip__in=client_ips)
-                .values_list("client_ip", flat=True)
-            )
-
-            # Keep only new records
-            new_records = [
-                item for item in payload
-                if item.get("client_ip") not in existing_ips
-            ]
-
-            if not new_records:
+            if not payload_map:
                 return api_response(
                     success=False,
-                    message="All client IPs already exist",
+                    message="No valid client_ip found in payload",
                     data=[]
                 )
 
-            serializer = VPNSessionSerializer(data=new_records, many=True)
-            serializer.is_valid(raise_exception=True)
+            payload_ips = set(payload_map.keys())
 
+            # -----------------------------
+            # Step 1: Fetch DB sessions once
+            # -----------------------------
+            db_sessions = VPNSession.objects.filter(
+                client_ip__in=payload_ips
+            )
+
+            db_map = {s.client_ip: s for s in db_sessions}
+            db_ips = set(db_map.keys())
+
+            # -----------------------------
+            # Step 2: Deactivate missing ACTIVE sessions
+            # (ACTIVE in DB but not in payload)
+            # -----------------------------
+            VPNSession.objects.filter(
+                status="ACTIVE"
+            ).exclude(
+                client_ip__in=payload_ips
+            ).update(
+                status="DEACTIVE",
+                disconnected_at=timezone.now()
+            )
+
+            # -----------------------------
+            # Step 3: Update existing sessions
+            # -----------------------------
+            sessions_to_update = []
+
+            for ip in payload_ips & db_ips:
+                session = db_map[ip]
+                payload_data = payload_map[ip]
+
+                if session.status != "ACTIVE":
+                    session.status = "ACTIVE"
+                    session.connected_at = timezone.now()
+
+                session.uptime = payload_data.get("uptime", session.uptime)
+                session.last_seen = timezone.now()
+
+                sessions_to_update.append(session)
+
+            # -----------------------------
+            # Step 4: Create new sessions
+            # -----------------------------
+            sessions_to_create = []
+
+            for ip in payload_ips - db_ips:
+                payload_data = payload_map[ip]
+
+                sessions_to_create.append(
+                    VPNSession(
+                        client_ip=ip,
+                        status="ACTIVE",
+                        uptime=payload_data.get("uptime"),
+                        connected_at=timezone.now(),
+                        last_seen=timezone.now(),
+                    )
+                )
+
+            # -----------------------------
+            # Step 5: Atomic DB write
+            # -----------------------------
             with transaction.atomic():
-                serializer.save()
+                if sessions_to_update:
+                    VPNSession.objects.bulk_update(
+                        sessions_to_update,
+                        ["status", "uptime", "last_seen", "connected_at"]
+                    )
+
+                if sessions_to_create:
+                    VPNSession.objects.bulk_create(sessions_to_create)
 
             return api_response(
                 success=True,
-                message="VPN sessions created successfully",
-                data=serializer.data
+                message="VPN sessions synchronized successfully",
+                data={
+                    "updated": len(sessions_to_update),
+                    "created": len(sessions_to_create),
+                    "active": len(payload_ips)
+                }
             )
 
         except Exception as e:
