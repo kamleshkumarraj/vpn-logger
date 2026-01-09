@@ -1,122 +1,163 @@
-/* Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    background: radial-gradient(circle at top, #0f2027, #000);
-    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    font-family: Inter, system-ui;
+    background: #0f1424;
     color: #fff;
-    min-height: 100vh;
 }
 
-/* Container */
-.dashboard-container {
-    width: 100%;
-    padding: 40px 0;
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #0b1020;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    padding: 20px;
 }
 
-.dashboard-title {
-    font-size: 36px;
-    margin-bottom: 40px;
-    letter-spacing: 1px;
-}
-
-/* VPN CARD */
-.vpn-card {
-    width: 1200px;
-    min-height: 220px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(18px);
-    border-radius: 32px;
-
-    padding: 30px 40px;
+.logo {
+    font-size: 20px;
+    font-weight: 700;
     margin-bottom: 30px;
-
-    box-shadow:
-        0 0 25px rgba(0, 255, 255, 0.15),
-        inset 0 0 20px rgba(255, 255, 255, 0.08);
-
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
-.vpn-card:hover {
-    transform: translateY(-8px) scale(1.01);
-    box-shadow:
-        0 0 40px rgba(0, 255, 255, 0.35),
-        inset 0 0 25px rgba(255, 255, 255, 0.12);
+.menu {
+    list-style: none;
+    padding: 0;
 }
 
-/* Left */
-.vpn-left h2 {
-    font-size: 28px;
+.menu li {
     margin-bottom: 10px;
 }
 
-.ip {
-    font-size: 18px;
+.menu li a {
+    text-decoration: none;
+    color: #9aa4bf;
+    padding: 12px;
+    display: block;
+    border-radius: 8px;
+}
+
+.menu li.active a {
+    background: #12204a;
     color: #00eaff;
 }
 
-/* Status */
+.sidebar-footer {
+    margin-top: auto;
+    font-size: 12px;
+    color: #7f8bbd;
+}
+
+/* Header */
+.header {
+    height: 64px;
+    background: linear-gradient(90deg,#0f1424,#141b3a);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #00bcd4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Page */
+.page {
+    padding: 24px;
+}
+
+/* Table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #121936;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 14px;
+    color: #9aa4bf;
+    font-size: 13px;
+}
+
+.data-table td {
+    padding: 14px;
+    border-top: 1px solid #1f2a52;
+}
+
 .status {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: bold;
-    margin-bottom: 10px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
 }
 
 .status.established {
-    background: linear-gradient(90deg, #00ffcc, #00ff88);
-    color: #003;
+    background: #163f2b;
+    color: #3dff9a;
 }
 
-/* Center */
-.vpn-center {
-    max-width: 450px;
+/* Actions */
+.action-wrapper {
+    position: relative;
+}
+
+.dots {
+    width: 18px;
+    cursor: pointer;
+}
+
+.action-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 24px;
+    background: #0f1738;
+    border-radius: 8px;
+    min-width: 150px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+
+.menu-item {
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: #19245a;
+}
+
+.menu-item.danger {
+    color: #ff6b6b;
+}
+
+.empty {
     text-align: center;
-}
-
-.proposal {
-    font-size: 14px;
-    opacity: 0.8;
-    margin-top: 10px;
-}
-
-/* Right */
-.vpn-right {
-    text-align: right;
-}
-
-.traffic {
-    font-size: 22px;
-    margin-bottom: 10px;
-}
-
-.traffic.in {
-    color: #00ffcc;
-}
-
-.traffic.out {
-    color: #ff6ec7;
-}
-
-/* Responsive */
-@media (max-width: 1480px) {
-    .vpn-card {
-        width: 95%;
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
+    color: #7f8bbd;
 }

@@ -1,0 +1,16 @@
+<div class="sidebar">
+    <div class="logo">Naval WAF ML</div>
+
+    <ul class="menu">
+        <li class="{% if menu == 'active' %}active{% endif %}">
+            <a href="?status=active">Active Connections</a>
+        </li>
+        <li class="{% if menu == 'inactive' %}active{% endif %}">
+            <a href="?status=inactive">Deactive Connections</a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        v1.0.0 • <span class="online">System Online</span>
+    </div>
+</div>

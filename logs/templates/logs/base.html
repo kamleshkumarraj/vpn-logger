@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Naval WAF ML{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+
+<div class="app-container">
+    {% include "partials/sidebar.html" %}
+
+    <div class="main-content">
+        {% include "partials/header.html" %}
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script>
+function toggleMenu(id) {
+    document.querySelectorAll('.action-menu').forEach(m => m.style.display='none');
+    document.getElementById(id).style.display = 'block';
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('.action-wrapper')) {
+        document.querySelectorAll('.action-menu').forEach(m => m.style.display='none');
+    }
+});
+</script>
+
+</body>
+</html>

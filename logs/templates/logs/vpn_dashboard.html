@@ -1,40 +1,64 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>VPN Dashboard</title>
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}VPN Connections{% endblock %}
 
-<div class="dashboard-container">
-    <h1 class="dashboard-title">VPN Sessions</h1>
+{% block content %}
+<div class="page">
 
-    {% for s in sessions %}
-    <div class="vpn-card">
-        <div class="vpn-left">
-            <h2>{{ s.name }}</h2>
-            <span class="status {{ s.status|lower }}">{{ s.status }}</span>
-            <p class="ip">{{ s.client_ip }}</p>
-        </div>
+    <h2>Detected Connections</h2>
 
-        <div class="vpn-center">
-            <p><strong>Uptime:</strong> {{ s.uptime }}</p>
-            <p class="proposal">{{ s.proposal }}</p>
-        </div>
+    <table class="data-table">
+        <thead>
+        <tr>
+            <th>VPN Name</th>
+            <th>Client IP</th>
+            <th>Status</th>
+            <th>Uptime</th>
+            <th>Proposal</th>
+            <th>Bytes In</th>
+            <th>Bytes Out</th>
+            <th></th>
+        </tr>
+        </thead>
 
-        <div class="vpn-right">
-            <div class="traffic in">
-                ⬇ {{ s.bytes_in }} B
-            </div>
-            <div class="traffic out">
-                ⬆ {{ s.bytes_out }} B
-            </div>
-        </div>
-    </div>
-    {% endfor %}
+        <tbody>
+        {% for c in connections %}
+        <tr>
+            <td>{{ c.name }}</td>
+            <td>{{ c.client_ip }}</td>
+
+            <td>
+                <span class="status {{ c.status|lower }}">
+                    {{ c.status }}
+                </span>
+            </td>
+
+            <td>{{ c.uptime }}</td>
+            <td class="mono">{{ c.proposal }}</td>
+            <td>{{ c.bytes_in }}</td>
+            <td>{{ c.bytes_out }}</td>
+
+            <td class="action-wrapper">
+                <img src="{% static 'icons/more.svg' %}"
+                     class="dots"
+                     onclick="toggleMenu('menu{{ forloop.counter }}')">
+
+                <div class="action-menu" id="menu{{ forloop.counter }}">
+                    <div class="menu-item danger">
+                        <img src="{% static 'icons/disconnect.svg' %}">
+                        Disconnect
+                    </div>
+                    <div class="menu-item danger">
+                        <img src="{% static 'icons/delete.svg' %}">
+                        Delete
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="empty">No connections</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
 </div>
-
-</body>
-</html>
+{% endblock %}
