@@ -25,18 +25,44 @@ from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework import status
 
+from django.db import transaction
+from django.utils import timezone
+from rest_framework.views import APIView
+from rest_framework import status
+
 class VPNSessionCreateView(APIView):
 
     def post(self, request):
         try:
             payload = request.data
 
-            # Normalize payload (single OR bulk)
+            # -----------------------------
+            # Normalize payload
+            # -----------------------------
+            if payload is None:
+                payload = []
+
             if isinstance(payload, dict):
                 payload = [payload]
 
             # -----------------------------
-            # Step 0: Normalize payload
+            # CASE 1: Empty payload → deactivate ALL
+            # -----------------------------
+            if len(payload) == 0:
+                updated = VPNSession.objects.filter(
+                    status="Active"
+                ).update(
+                    status="Deactive"
+                )
+
+                return api_response(
+                    success=True,
+                    message="All VPN sessions deactivated (empty payload)",
+                    data={"deactivated": updated}
+                )
+
+            # -----------------------------
+            # Step 0: Normalize payload map
             # -----------------------------
             payload_map = {
                 item["client_ip"]: item
@@ -44,14 +70,14 @@ class VPNSessionCreateView(APIView):
                 if item.get("client_ip")
             }
 
-            if not payload_map:
+            payload_ips = set(payload_map.keys())
+
+            if not payload_ips:
                 return api_response(
                     success=False,
-                    message="No valid client_ip found in payload",
+                    message="Payload does not contain valid client_ip values",
                     data=[]
                 )
-
-            payload_ips = set(payload_map.keys())
 
             # -----------------------------
             # Step 1: Fetch DB sessions once
@@ -65,15 +91,13 @@ class VPNSessionCreateView(APIView):
 
             # -----------------------------
             # Step 2: Deactivate missing ACTIVE sessions
-            # (ACTIVE in DB but not in payload)
             # -----------------------------
             VPNSession.objects.filter(
-                status="ACTIVE"
+                status="Active"
             ).exclude(
                 client_ip__in=payload_ips
             ).update(
-                status="DEACTIVE",
-                disconnected_at=timezone.now()
+                status="Deactive"
             )
 
             # -----------------------------
@@ -83,14 +107,15 @@ class VPNSessionCreateView(APIView):
 
             for ip in payload_ips & db_ips:
                 session = db_map[ip]
-                payload_data = payload_map[ip]
+                data = payload_map[ip]
 
-                if session.status != "ACTIVE":
-                    session.status = "ACTIVE"
-                    session.connected_at = timezone.now()
-
-                session.uptime = payload_data.get("uptime", session.uptime)
-                session.last_seen = timezone.now()
+                session.status = "Active"
+                session.vpn_id = data.get("vpn_id", session.vpn_id)
+                session.name = data.get("name", session.name)
+                session.uptime = data.get("uptime", session.uptime)
+                session.proposal = data.get("proposal", session.proposal)
+                session.bytes_in = data.get("bytes_in", session.bytes_in)
+                session.bytes_out = data.get("bytes_out", session.bytes_out)
 
                 sessions_to_update.append(session)
 
@@ -100,38 +125,53 @@ class VPNSessionCreateView(APIView):
             sessions_to_create = []
 
             for ip in payload_ips - db_ips:
-                payload_data = payload_map[ip]
+                data = payload_map[ip]
 
                 sessions_to_create.append(
                     VPNSession(
                         client_ip=ip,
-                        status="ACTIVE",
-                        uptime=payload_data.get("uptime"),
-                        connected_at=timezone.now(),
-                        last_seen=timezone.now(),
+                        vpn_id=data.get("vpn_id"),
+                        name=data.get("name"),
+                        status="Active",
+                        uptime=data.get("uptime"),
+                        proposal=data.get("proposal"),
+                        bytes_in=data.get("bytes_in", 0),
+                        bytes_out=data.get("bytes_out", 0),
                     )
                 )
 
             # -----------------------------
-            # Step 5: Atomic DB write
+            # Step 5: Atomic write
             # -----------------------------
             with transaction.atomic():
                 if sessions_to_update:
                     VPNSession.objects.bulk_update(
                         sessions_to_update,
-                        ["status", "uptime", "last_seen", "connected_at"]
+                        [
+                            "status",
+                            "vpn_id",
+                            "name",
+                            "uptime",
+                            "proposal",
+                            "bytes_in",
+                            "bytes_out",
+                        ]
                     )
 
                 if sessions_to_create:
-                    VPNSession.objects.bulk_create(sessions_to_create)
+                    VPNSession.objects.bulk_create(
+                        sessions_to_create,
+                        ignore_conflicts=True  # safety for race conditions
+                    )
 
             return api_response(
                 success=True,
                 message="VPN sessions synchronized successfully",
                 data={
+                    "received": len(payload),
                     "updated": len(sessions_to_update),
                     "created": len(sessions_to_create),
-                    "active": len(payload_ips)
+                    "active": len(payload_ips),
                 }
             )
 
