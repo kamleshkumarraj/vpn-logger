@@ -249,7 +249,7 @@ from django.shortcuts import render
 
 def vpn_dashboard(request):
     # Example data (replace with DB or API later)
-    status = request.query_params.get("status") 
+    status = request.GET.get("status") 
     vpn_sessions = VPNSession.objects.filter(status=status)
     
     context = {
