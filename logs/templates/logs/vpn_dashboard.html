@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "logs/base.html" %}
 {% block title %}VPN Connections{% endblock %}
-
+{% load static %}
 {% block content %}
 <div class="page">
 
@@ -48,7 +48,7 @@
                         Disconnect
                     </div>
                     <div class="menu-item danger">
-                        <img src="{% static 'icons/delete.svg' %}">
+                        <img src="{% static 'icons/disconnect.svg' %}">
                         Delete
                     </div>
                 </div>
